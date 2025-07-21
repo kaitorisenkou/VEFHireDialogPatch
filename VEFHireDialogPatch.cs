@@ -8,7 +8,11 @@ using System.Threading.Tasks;
 using Verse;
 using RimWorld;
 using HarmonyLib;
+#if v15
 using VFECore.Misc;
+#else
+using VEF.Planet;
+#endif
 using UnityEngine;
 using Verse.Noise;
 using System.Reflection;
@@ -32,7 +36,7 @@ namespace VEFHireDialogPatch {
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator) {
             var instructionList = instructions.ToList();
             int i = 0;
-            Log.Message("0:"+instructionList.Count);
+            //Log.Message("0:"+instructionList.Count);
             do { i++; } while (instructionList[i].opcode != OpCodes.Ldloca_S);
             object operand_InRect = instructionList[i].operand;
             do { i++; } while (instructionList[i].opcode != OpCodes.Br_S);
@@ -41,16 +45,19 @@ namespace VEFHireDialogPatch {
                 new CodeInstruction(OpCodes.Ldloca_S,operand_InRect),
                 new CodeInstruction(OpCodes.Call,AccessTools.Method(typeof(Patch_Dialog_Hire_DoWindowContents),nameof(HireableScrollBegin)))
             });
-            Log.Message("1:"+i);
+            //Log.Message("1:"+i);
 
+#if v15
             MethodInfo methodInfo = AccessTools.Method(typeof(VFECore.UItils.UIUtility), nameof(VFECore.UItils.UIUtility.TakeTopPart));
-            
+#else
+            MethodInfo methodInfo = AccessTools.Method(typeof(VEF.Utils.UIUtility), nameof(VEF.Utils.UIUtility.TakeTopPart));
+#endif
             do { i++; } while (instructionList[i].opcode != OpCodes.Call || (MethodInfo)instructionList[i].operand != methodInfo);
             instructionList.InsertRange(i-3, new CodeInstruction[] {
                 new CodeInstruction(OpCodes.Ldloca_S,operand_InRect),
                 new CodeInstruction(OpCodes.Call,AccessTools.Method(typeof(Patch_Dialog_Hire_DoWindowContents),nameof(HireableScrollEnd)))
             });
-            Log.Message("2:" + i);
+            //Log.Message("2:" + i);
             return instructionList;
         }
 
@@ -65,7 +72,7 @@ namespace VEFHireDialogPatch {
             rectInner = new Rect(0, 0, inRect.width - 16f, inRect.yMin);
             Widgets.EndScrollView();
             inRect = new Rect(0, 430, inRect.width, 190);
-            Log.Message("inRect:"+inRect);
+            //Log.Message("inRect:"+inRect);
         }
     }
 }
